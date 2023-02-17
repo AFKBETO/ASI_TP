@@ -1,4 +1,4 @@
-package TP1;
+package TP1.Exo1;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,12 +10,13 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 
-public class JmsMessageAsynchronousQueueExample {
+public class JmsMessageQueueExample {
     public static void main(String[] args) throws URISyntaxException, Exception {
         BrokerService broker = BrokerFactory.createBroker(new URI(
                 "broker:(tcp://localhost:61616)"));
@@ -37,9 +38,10 @@ public class JmsMessageAsynchronousQueueExample {
 
             // Consumer
             MessageConsumer consumer = session.createConsumer(queue);
-            consumer.setMessageListener(new ConsumerMessageListener("Consumer"));
             connection.start();
-            Thread.sleep(1000);
+            TextMessage textMsg = (TextMessage) consumer.receive();
+            System.out.println(textMsg);
+            System.out.println("Received: " + textMsg.getText());
             session.close();
         } finally {
             if (connection != null) {

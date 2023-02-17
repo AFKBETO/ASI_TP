@@ -1,4 +1,4 @@
-package TP1;
+package TP1.Exo1;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,13 +10,13 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 
+import TP1.ConsumerMessageListener;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 
-public class JmsMessageQueueExample {
+public class JmsMultipleCustomersMessageQueueExample {
     public static void main(String[] args) throws URISyntaxException, Exception {
         BrokerService broker = BrokerFactory.createBroker(new URI(
                 "broker:(tcp://localhost:61616)"));
@@ -30,18 +30,25 @@ public class JmsMessageQueueExample {
             Session session = connection.createSession(false,
                     Session.AUTO_ACKNOWLEDGE);
             Queue queue = session.createQueue("customerQueue");
-            String payload = "Important Task";
-            Message msg = session.createTextMessage(payload);
-            MessageProducer producer = session.createProducer(queue);
-            System.out.println("Sending text '" + payload + "'");
-            producer.send(msg);
 
             // Consumer
-            MessageConsumer consumer = session.createConsumer(queue);
+            for (int i = 0; i < 4; i++) {
+                MessageConsumer consumer = session.createConsumer(queue);
+                consumer.setMessageListener(new ConsumerMessageListener(
+                        "Consumer " + i));
+            }
             connection.start();
-            TextMessage textMsg = (TextMessage) consumer.receive();
-            System.out.println(textMsg);
-            System.out.println("Received: " + textMsg.getText());
+
+            String basePayload = "Important Task";
+            MessageProducer producer = session.createProducer(queue);
+            for (int i = 0; i < 10; i++) {
+                String payload = basePayload + i;
+                Message msg = session.createTextMessage(payload);
+                System.out.println("Sending text '" + payload + "'");
+                producer.send(msg);
+            }
+
+            Thread.sleep(1000);
             session.close();
         } finally {
             if (connection != null) {
